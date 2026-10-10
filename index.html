@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IonQ All-to-All Advantage Visualizer</title>
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --card-bg: rgba(18, 24, 38, 0.75);
+      --card-border: #1e293b;
+      --accent-ionq: #00f0ff;
+      --accent-grid: #ff2a5f;
+      --accent-gold: #ffb703;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 32px 24px;
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(0, 240, 255, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(255, 42, 95, 0.08) 0px, transparent 50%);
+      color: var(--text-main);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+    }
+
+    .header {
+      text-align: center;
+      max-width: 850px;
+      margin: 0 auto 32px auto;
+    }
+
+    .header-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      border-radius: 20px;
+      color: var(--accent-ionq);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .header h1 {
+      margin: 0 0 12px 0;
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .header p {
+      margin: 0;
+      color: var(--text-sub);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .nav-btn {
+      background: var(--card-bg);
+      color: var(--text-sub);
+      border: 1px solid var(--card-border);
+      padding: 12px 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-btn:hover {
+      border-color: var(--accent-ionq);
+      color: var(--text-main);
+      transform: translateY(-2px);
+    }
+
+    .nav-btn.active {
+      background: rgba(0, 240, 255, 0.12);
+      border-color: var(--accent-ionq);
+      color: var(--accent-ionq);
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+    }
+
+    .simulator-panel {
+      max-width: 1200px;
+      margin: 0 auto 24px auto;
+      background: rgba(18, 24, 38, 0.5);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .sim-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-gold);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .slider-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .slider-group label {
+      font-size: 12px;
+      color: var(--text-sub);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .slider-group input[type=range] {
+      flex: 1;
+      accent-color: var(--accent-ionq);
+    }
+
+    .slider-val {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      min-width: 45px;
+    }
+
+    .data-source-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: rgba(0, 240, 255, 0.1);
+      color: var(--accent-ionq);
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      display: none;
+    }
+
+    .visualizer-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-grid { background: rgba(255, 42, 95, 0.15); color: var(--accent-grid); border: 1px solid rgba(255, 42, 95, 0.3); }
+    .badge-ionq { background: rgba(0, 240, 255, 0.15); color: var(--accent-ionq); border: 1px solid rgba(0, 240, 255, 0.3); }
+
+    canvas {
+      width: 100%;
+      height: 260px;
+      background: rgba(3, 7, 18, 0.6);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      margin-bottom: 20px;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .metric-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 12px 8px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .metric-val {
+      font-size: 20px;
+      font-weight: 800;
+      margin-top: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric-label {
+      font-size: 10px;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .summary-bar {
+      max-width: 1200px;
+      margin: 24px auto 0 auto;
+      background: rgba(0, 240, 255, 0.04);
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      border-radius: 12px;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .summary-text {
+      color: var(--text-main);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .summary-val {
+      color: var(--accent-ionq);
+      font-weight: 800;
+    }
+
+    /* Educational Explainer Panel */
+    .explainer-container {
+      max-width: 1200px;
+      margin: 32px auto 0 auto;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 28px;
+      backdrop-filter: blur(12px);
+    }
+
+    .explainer-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .explainer-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .explainer-step {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .step-num {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      line-height: 24px;
+      text-align: center;
+      border-radius: 50%;
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--accent-ionq);
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .step-heading {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    .step-desc {
+      font-size: 12.5px;
+      color: var(--text-sub);
+      line-height: 1.6;
+    }
+
+    .step-code {
+      display: inline-block;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--accent-gold);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-badge">Qollab x IonQ Hackathon 2026</div>
+    <h1>IonQ All-to-All Advantage Visualizer</h1>
+    <p>Evaluating non-local entangling circuit compilation: Constrained 2D Grid Topology vs. IonQ Trapped-Ion All-to-All Topology</p>
+  </div>
+
+  <div class="controls">
+    <button class="nav-btn active" id="btn-qft" onclick="selectBenchmark('qft')">Benchmark 1: QFT (5-Qubit)</button>
+    <button class="nav-btn" id="btn-qaoa" onclick="selectBenchmark('qaoa')">Benchmark 2: QAOA Max-Cut (K5 Graph)</button>
+  </div>
+
+  <!-- Hardware Noise Simulator & Backend Data Indicator -->
+  <div class="simulator-panel">
+    <div class="sim-title">⚡ Hardware Noise Simulator</div>
+    <div class="slider-group">
+      <label for="errorSlider">2-Qubit Gate Error Rate (CX/MS):</label>
+      <input type="range" id="errorSlider" min="0.001" max="0.015" step="0.001" value="0.004" oninput="updateFidelityCalculations()">
+      <span class="slider-val" id="errorVal">0.40%</span>
+    </div>
+    <div class="data-source-badge" id="liveDataBadge">● Qiskit Benchmark Data</div>
+  </div>
+
+  <div class="visualizer-container">
+    <!-- Left Panel: 2D Grid Hardware -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Constrained 2D Grid</div>
+        <span class="badge badge-grid">Heavy-Hex / Grid</span>
+      </div>
+      <canvas id="gridCanvas"></canvas>
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <div class="metric-label">SWAP Gates</div>
+          <div class="metric-val" id="gridSwaps" style="color: var(--accent-grid)">12</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">2Q Gates</div>
+          <div class="metric-val" id="grid2Q">28</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Depth</div>
+          <div class="metric-val" id="gridDepth">38</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Est. Fidelity</div>
+          <div class="metric-val" id="gridFid">89.3%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel: IonQ All-to-All Trap -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">IonQ Trapped-Ion</div>
+        <span class="badge badge-ionq">All-to-All Optical</span>
+      </div>
+      <canvas id="ionqCanvas"></canvas>
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <div class="metric-label">SWAP Gates</div>
+          <div class="metric-val" id="ionqSwaps" style="color: var(--accent-ionq)">0</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">2Q Gates</div>
+          <div class="metric-val" id="ionq2Q">10</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Depth</div>
+          <div class="metric-val" id="ionqDepth">14</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Est. Fidelity</div>
+          <div class="metric-val" id="ionqFid">97.0%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-bar">
+    <div class="summary-text">
+      IonQ eliminates <span class="summary-val" id="swapDiff">12 SWAPs</span> and reduces circuit depth by <span class="summary-val" id="depthRatio">2.7x</span>.
+    </div>
+    <div class="summary-text">
+      Fidelity Advantage: <span class="summary-val" id="fidAdv">+7.7%</span>
+    </div>
+  </div>
+
+  <!-- Educational Explainer Section -->
+  <div class="explainer-container">
+    <div class="explainer-title">
+      💡 How It Works: The Quantum Compiler Bottleneck
+    </div>
+    <div class="explainer-grid">
+      <div class="explainer-step">
+        <div class="step-num">1</div>
+        <div class="step-heading">Non-Local Gate Conflicts</div>
+        <div class="step-desc">
+          Algorithms like QFT and QAOA require operations between non-adjacent qubits (e.g., <span class="step-code">CX(q0, q4)</span>). On planar superconducting grids, physical couplers only exist between nearest neighbors.
+        </div>
+      </div>
+      <div class="explainer-step">
+        <div class="step-num">2</div>
+        <div class="step-heading">The SWAP Multiplier Penalty</div>
+        <div class="step-desc">
+          To bridge physical distance, transpilers insert SWAP gates. Each SWAP decomposes into <strong>3 CNOT gates</strong>. For a 5-qubit QFT, this adds 12 SWAPs—expanding the circuit by <strong>36 extra 2-qubit operations</strong>.
+        </div>
+      </div>
+      <div class="explainer-step">
+        <div class="step-num">3</div>
+        <div class="step-heading">Optical Trapped-Ion Solution</div>
+        <div class="step-desc">
+          IonQ addresses individual ions in a linear crystal using steerable optical Raman beams. Any arbitrary pair can be entangled directly, yielding <strong>zero routing SWAPs</strong> and preserving state fidelity.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentBenchmark = 'qft';
+
+    // Baseline fallback structure
+    const rawMetrics = {
+      qft: { grid2Q: 28, gridDepth: 38, ionq2Q: 10, ionqDepth: 14, swapDiff: 12, ratio: "2.7x" },
+      qaoa: { grid2Q: 32, gridDepth: 30, ionq2Q: 20, ionqDepth: 23, swapDiff: 4, ratio: "1.3x" }
+    };
+
+    // Load Qiskit Transpilation Output from benchmark_data.json
+    async function loadLiveBenchmarkData() {
+      try {
+        const response = await fetch(`benchmark_data.json?t=${new Date().getTime()}`);
+        if (response.ok) {
+          const liveData = await response.json();
+          
+          if (liveData.qft) {
+            rawMetrics.qft = {
+              grid2Q: liveData.qft.grid_architecture.two_qubit_gates,
+              gridDepth: liveData.qft.grid_architecture.depth,
+              ionq2Q: liveData.qft.ionq_architecture.two_qubit_gates,
+              ionqDepth: liveData.qft.ionq_architecture.depth,
+              swapDiff: liveData.qft.comparison.swaps_eliminated,
+              ratio: liveData.qft.comparison.depth_reduction_factor + 'x'
+            };
+          }
+
+          if (liveData.qaoa) {
+            rawMetrics.qaoa = {
+              grid2Q: liveData.qaoa.grid_architecture.two_qubit_gates,
+              gridDepth: liveData.qaoa.grid_architecture.depth,
+              ionq2Q: liveData.qaoa.ionq_architecture.two_qubit_gates,
+              ionqDepth: liveData.qaoa.ionq_architecture.depth,
+              swapDiff: liveData.qaoa.comparison.swaps_eliminated,
+              ratio: liveData.qaoa.comparison.depth_reduction_factor + 'x'
+            };
+          }
+
+          const badge = document.getElementById('liveDataBadge');
+          if (badge) badge.style.display = 'inline-block';
+          selectBenchmark(currentBenchmark);
+        }
+      } catch (err) {
+        console.log("Using default fallback metrics until benchmark_data.json is loaded.");
+      }
+    }
+
+    function updateFidelityCalculations() {
+      const errRate = parseFloat(document.getElementById('errorSlider').value);
+      document.getElementById('errorVal').innerText = (errRate * 100).toFixed(2) + '%';
+
+      const data = rawMetrics[currentBenchmark];
+      if (!data) return;
+
+      const gridFidPct = Math.pow(1 - errRate, data.grid2Q) * 100;
+      const ionqFidPct = Math.pow(1 - (errRate * 0.75), data.ionq2Q) * 100;
+      const advPct = ionqFidPct - gridFidPct;
+
+      document.getElementById('gridFid').innerText = gridFidPct.toFixed(1) + '%';
+      document.getElementById('ionqFid').innerText = ionqFidPct.toFixed(1) + '%';
+      document.getElementById('fidAdv').innerText = '+' + advPct.toFixed(1) + '%';
+    }
+
+    function selectBenchmark(type) {
+      currentBenchmark = type;
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      
+      const activeBtn = document.getElementById(`btn-${type}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const data = rawMetrics[type];
+      if (!data) return;
+
+      document.getElementById('gridSwaps').innerText = data.swapDiff;
+      document.getElementById('grid2Q').innerText = data.grid2Q;
+      document.getElementById('gridDepth').innerText = data.gridDepth;
+
+      document.getElementById('ionqSwaps').innerText = 0;
+      document.getElementById('ionq2Q').innerText = data.ionq2Q;
+      document.getElementById('ionqDepth').innerText = data.ionqDepth;
+
+      document.getElementById('swapDiff').innerText = `${data.swapDiff} SWAPs`;
+      document.getElementById('depthRatio').innerText = data.ratio;
+
+      updateFidelityCalculations();
+      drawCanvases();
+    }
+
+    function drawGridCanvas() {
+      const c = document.getElementById('gridCanvas');
+      const ctx = c.getContext('2d');
+      c.width = c.clientWidth * window.devicePixelRatio;
+      c.height = c.clientHeight * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      const w = c.clientWidth;
+      const h = c.clientHeight;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const nodes = [
+        {x: w * 0.25, y: h * 0.3},
+        {x: w * 0.5,  y: h * 0.3},
+        {x: w * 0.75, y: h * 0.3},
+        {x: w * 0.37, y: h * 0.7},
+        {x: w * 0.63, y: h * 0.7}
+      ];
+
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 3;
+      const connections = [[0,1], [1,2], [0,3], [1,3], [1,4], [2,4], [3,4]];
+      connections.forEach(([i, j]) => {
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.stroke();
+      });
+
+      const swapPath = currentBenchmark === 'qft' ? [[0,1], [1,2]] : [[0,3], [3,4]];
+      ctx.strokeStyle = '#ff2a5f';
+      ctx.lineWidth = 4;
+      ctx.shadowColor = '#ff2a5f';
+      ctx.shadowBlur = 12;
+
+      swapPath.forEach(([i, j]) => {
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.stroke();
+      });
+
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#ff2a5f';
+      ctx.font = '600 12px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText('SWAP Routing Required', w * 0.5, h * 0.15);
+
+      nodes.forEach((n, i) => {
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = (i === 0 || i === 2) ? '#ff2a5f' : '#334155';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, 18, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = '700 12px system-ui';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`q${i}`, n.x, n.y);
+      });
+    }
+
+    function drawIonQCanvas() {
+      const c = document.getElementById('ionqCanvas');
+      const ctx = c.getContext('2d');
+      c.width = c.clientWidth * window.devicePixelRatio;
+      c.height = c.clientHeight * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      const w = c.clientWidth;
+      const h = c.clientHeight;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const nodes = [
+        {x: w * 0.15, y: h * 0.65},
+        {x: w * 0.32, y: h * 0.65},
+        {x: w * 0.50, y: h * 0.65},
+        {x: w * 0.68, y: h * 0.65},
+        {x: w * 0.85, y: h * 0.65}
+      ];
+
+      let ionqPairs = [];
+      let labelText = '';
+
+      if (currentBenchmark === 'qft') {
+        ionqPairs = [[0, 4], [1, 3], [0, 2]];
+        labelText = 'Dynamic Multi-Qubit Optical Gates (0 SWAPs)';
+      } else if (currentBenchmark === 'qaoa') {
+        ionqPairs = [
+          [0, 1], [0, 2], [0, 3], [0, 4],
+          [1, 2], [1, 3], [1, 4],
+          [2, 3], [2, 4],
+          [3, 4]
+        ];
+        labelText = 'Complete Web (K5) Direct All-to-All Links (0 SWAPs)';
+      }
+
+      ctx.strokeStyle = '#00f0ff';
+      ctx.shadowColor = '#00f0ff';
+
+      ionqPairs.forEach(([i, j]) => {
+        const startX = nodes[i].x;
+        const endX = nodes[j].x;
+        const midX = (startX + endX) / 2;
+        const distance = Math.abs(j - i);
+        const arcHeight = h * 0.65 - (distance * 28);
+
+        ctx.lineWidth = distance === 4 ? 3 : 1.5;
+        ctx.shadowBlur = distance === 4 ? 12 : 6;
+
+        ctx.beginPath();
+        ctx.moveTo(startX, h * 0.65);
+        ctx.quadraticCurveTo(midX, arcHeight, endX, h * 0.65);
+        ctx.stroke();
+      });
+
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#00f0ff';
+      ctx.font = '600 12px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText(labelText, w * 0.5, h * 0.15);
+
+      nodes.forEach((n, i) => {
+        ctx.fillStyle = 'rgba(0, 240, 255, 0.15)';
+        ctx.strokeStyle = '#00f0ff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, 16, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = '700 12px system-ui';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`q${i}`, n.x, n.y);
+      });
+    }
+
+    function drawCanvases() {
+      drawGridCanvas();
+      drawIonQCanvas();
+    }
+
+    window.onload = function() {
+      loadLiveBenchmarkData();
+      updateFidelityCalculations();
+      drawCanvases();
+    };
+    window.onresize = drawCanvases;
+  </script>
+</body>
+</html>

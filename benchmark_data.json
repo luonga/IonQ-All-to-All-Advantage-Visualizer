@@ -1,0 +1,48 @@
+{
+  "qft": {
+    "circuit_name": "QFT_5Q",
+    "num_qubits": 5,
+    "grid_architecture": {
+      "depth": 13,
+      "total_gates": 19,
+      "swap_gates": 4,
+      "two_qubit_gates": 12,
+      "estimated_fidelity_pct": 95.3
+    },
+    "ionq_architecture": {
+      "depth": 9,
+      "total_gates": 15,
+      "swap_gates": 0,
+      "two_qubit_gates": 0,
+      "estimated_fidelity_pct": 100.0
+    },
+    "comparison": {
+      "depth_reduction_factor": 1.44,
+      "swaps_eliminated": 4,
+      "fidelity_advantage_pct": 4.7
+    }
+  },
+  "qaoa": {
+    "circuit_name": "QAOA_MaxCut_5Q",
+    "num_qubits": 5,
+    "grid_architecture": {
+      "depth": 30,
+      "total_gates": 44,
+      "swap_gates": 4,
+      "two_qubit_gates": 32,
+      "estimated_fidelity_pct": 87.96
+    },
+    "ionq_architecture": {
+      "depth": 23,
+      "total_gates": 40,
+      "swap_gates": 0,
+      "two_qubit_gates": 20,
+      "estimated_fidelity_pct": 94.17
+    },
+    "comparison": {
+      "depth_reduction_factor": 1.3,
+      "swaps_eliminated": 4,
+      "fidelity_advantage_pct": 6.21
+    }
+  }
+}
